@@ -13,12 +13,12 @@ def hover_click(driver, element_hover, element_click):
     ActionChains(driver).move_to_element(element_hover).click(element_click).perform()
 
 
-def element_wait(driver, element, by_attr, wait_seconds):
+def element_wait(driver, element, by_attr, wait_seconds=10):
     return WebDriverWait(driver, wait_seconds).until(
         EC.presence_of_element_located((by_attr, element)))
 
 
-def elements_wait(driver, element, by_attr, wait_seconds):
+def elements_wait(driver, element, by_attr, wait_seconds=10):
     return WebDriverWait(driver, wait_seconds).until(
         EC.presence_of_all_elements_located((by_attr, element)))
 
@@ -46,7 +46,7 @@ def analyst_login(driver):
     driver.switch_to.frame('main')
     login = driver.find_element_by_id('hlsys_button1')
     login.send_keys(Keys.RETURN)
-    username = element_wait(driver, 'textsys_field3', By.ID, 10)
+    username = element_wait(driver, 'textsys_field3', By.ID)
     username.send_keys(app_username)
     password = driver.find_element_by_id('textsys_field2')
     password.send_keys(app_password)
@@ -55,7 +55,7 @@ def analyst_login(driver):
 
 def get_menu_new_items(driver):
     switch_to_frame_usermenu(driver)
-    return elements_wait(driver, 'igdm_%sMenuLv2MenuItemVertical' % element_prefix, By.CLASS_NAME, 10)
+    return elements_wait(driver, 'igdm_%sMenuLv2MenuItemVertical' % element_prefix, By.CLASS_NAME)
 
 
 def get_menu_new(driver):
@@ -63,7 +63,7 @@ def get_menu_new(driver):
     menu_bar = element_wait(driver,
                             "//div[@id='UpdatePanel2']//div[@id='WebDataMenu2']" +
                             "/ul[@class='igdm_%sMenuLv2MenuGroupHorizontalRoot ']" % element_prefix,
-                            By.XPATH, 10)
+                            By.XPATH)
     menu_bar_items = menu_bar.find_elements_by_xpath('//li')
     for i in menu_bar_items:
         if i.text == 'New':
@@ -74,7 +74,7 @@ from datetime import datetime
 
 
 def populate_field_text(driver, element_id, value=None):
-    element = element_wait(driver, element_id, By.ID, 10)
+    element = element_wait(driver, element_id, By.ID)
     element.send_keys(Keys.CONTROL, 'a')
     if value:
         element.send_keys(value)
@@ -109,7 +109,7 @@ import random
 def populate_field_selector(driver, element_id):
     switch_to_frame_innercontentfrm(driver)
     existing_windows = driver.window_handles
-    selector = element_wait(driver, element_id, By.ID, 10)
+    selector = element_wait(driver, element_id, By.ID)
     selector.click()
     pop_up = get_popup_window(driver, existing_windows)
     driver.switch_to.window(pop_up)
@@ -122,7 +122,7 @@ def populate_field_selector(driver, element_id):
         selection.click()
         # TODO: Make this select child nodes
     except:
-        table = elements_wait(driver, '//tr/td/a', By.XPATH, 10)
+        table = elements_wait(driver, '//tr/td/a', By.XPATH)
         items = get_table_items(table)
         selection = items[random.randrange(0, len(items))]
         selection.click()
@@ -138,7 +138,7 @@ import time
 
 def populate_field_dropdown(driver, element_id, dropdown_start_position=0):
     switch_to_frame_innercontentfrm(driver)
-    dropdown = element_wait(driver, element_id, By.ID, 10)
+    dropdown = element_wait(driver, element_id, By.ID)
     button = dropdown.find_element_by_class_name('igdd_%sDropDownButton ' % element_prefix)
     button.click()
     time.sleep(1)
@@ -217,7 +217,7 @@ from data_helper import get_random_user, get_active_end_users
 
 
 def populate_html_editor(driver, tab_id, frame_id):
-    tab = element_wait(driver, tab_id, By.ID, 10)
+    tab = element_wait(driver, tab_id, By.ID)
     tab.click()
     frame_wait(driver, frame_id)
     html_field = driver.switch_to_active_element()
@@ -322,7 +322,7 @@ def get_form_fields_dict(driver, form_name):
 
 def click_save(driver):
     switch_to_frame_innercontentfrm(driver)
-    save = element_wait(driver, '//input[contains(@title,"Save")]', By.XPATH, 10)
+    save = element_wait(driver, '//input[contains(@title,"Save")]', By.XPATH)
     save.click()
 
 
@@ -468,6 +468,26 @@ def create_new_change_click_cab_group(driver):
     item = get_menu_item(driver, 'Change')[0]
     open_menu_new_item(driver, item)
     switch_to_frame_innercontentfrm(driver)
-    cab_group = element_wait(driver, '//input[contains(@title,"Cab Group")]', By.XPATH, 10)
+    cab_group = element_wait(driver, '//input[contains(@title,"Cab Group")]', By.XPATH)
     cab_group.click()
     print 'Clicked in to Cab Group'
+
+
+def open_admin(driver):
+    driver.switch_to.default_content()
+    frame_wait(driver, 'UserMenu')
+    admin = element_wait(driver, 'x:1557894678.4:adr:1', By.ID)
+    click(driver, admin)
+
+
+def create_new_request_status(driver):
+    open_admin(driver)
+    frame_wait(driver, 'innerContentFrm')
+    request_statuses = element_wait(driver, 'Request Statuses', By.LINK_TEXT)
+    click(driver, request_statuses)
+    add_new = element_wait(driver, 'ctl00_ContentPlaceHolder1_btnAddPre', By.ID)
+    click(driver, add_new)
+    status_name = element_wait(driver, 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_textStatus', By.ID)
+    status_name.send_keys('testing')
+    save = element_wait(driver, 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_btnUpdate', By.ID)
+    click(driver, save)
