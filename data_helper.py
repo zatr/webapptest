@@ -86,14 +86,6 @@ def get_active_users():
     return users
 
 
-import random
-
-
-def get_random_user(user_list):
-    i = random.randrange(0, len(user_list))
-    return user_list[i]
-
-
 def move_data_outside_of_tuple(data):
     if data:
         items = []

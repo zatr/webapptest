@@ -47,4 +47,4 @@ class TestSubmitAnalystItems(unittest.TestCase):
         worker.create_new_change_click_cab_group(self.driver)
 
     def test_create_new_request_status(self):
-        worker.create_new_request_status(self.driver)
+        worker.create_new_request_status(self.driver, automatic_closure=True)

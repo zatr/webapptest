@@ -10,7 +10,8 @@ def click(driver, element):
 
 
 def hover_click(driver, element_hover, element_click):
-    ActionChains(driver).move_to_element(element_hover).click(element_click).perform()
+    ActionChains(
+        driver).move_to_element(element_hover).click(element_click).perform()
 
 
 def element_wait(driver, element, by_attr, wait_seconds=10):
@@ -55,15 +56,17 @@ def analyst_login(driver):
 
 def get_menu_new_items(driver):
     switch_to_frame_usermenu(driver)
-    return elements_wait(driver, 'igdm_%sMenuLv2MenuItemVertical' % element_prefix, By.CLASS_NAME)
+    return elements_wait(
+        driver, 'igdm_%sMenuLv2MenuItemVertical' % element_prefix, By.CLASS_NAME)
 
 
 def get_menu_new(driver):
     switch_to_frame_usermenu(driver)
-    menu_bar = element_wait(driver,
-                            "//div[@id='UpdatePanel2']//div[@id='WebDataMenu2']" +
-                            "/ul[@class='igdm_%sMenuLv2MenuGroupHorizontalRoot ']" % element_prefix,
-                            By.XPATH)
+    menu_bar = element_wait(
+        driver,
+        "//div[@id='UpdatePanel2']//div[@id='WebDataMenu2']" +
+        "/ul[@class='igdm_%sMenuLv2MenuGroupHorizontalRoot ']" % element_prefix,
+        By.XPATH)
     menu_bar_items = menu_bar.find_elements_by_xpath('//li')
     for i in menu_bar_items:
         if i.text == 'New':
@@ -103,9 +106,6 @@ def click_clear(driver):
     clear.click()
 
 
-import random
-
-
 def populate_field_selector(driver, element_id):
     switch_to_frame_innercontentfrm(driver)
     existing_windows = driver.window_handles
@@ -114,7 +114,8 @@ def populate_field_selector(driver, element_id):
     pop_up = get_popup_window(driver, existing_windows)
     driver.switch_to.window(pop_up)
     try:
-        tree_panel = element_wait(driver, 'ctl00_ContentPlaceHolder1_UpdatePanel1', By.ID, 2)
+        tree_panel = element_wait(
+            driver, 'ctl00_ContentPlaceHolder1_UpdatePanel1', By.ID, 2)
         items = tree_panel.find_elements_by_xpath('//div/ul/li/ul/li/a')
         if not items:
             items = tree_panel.find_elements_by_xpath('//div/ul/li/ul/li/div/a')
@@ -139,12 +140,15 @@ import time
 def populate_field_dropdown(driver, element_id, dropdown_start_position=0):
     switch_to_frame_innercontentfrm(driver)
     dropdown = element_wait(driver, element_id, By.ID)
-    button = dropdown.find_element_by_class_name('igdd_%sDropDownButton ' % element_prefix)
+    button = dropdown.find_element_by_class_name(
+        'igdd_%sDropDownButton ' % element_prefix)
     button.click()
     time.sleep(1)
-    list_items = dropdown.find_elements_by_class_name('igdd_%sListItem ' % element_prefix)
+    list_items = dropdown.find_elements_by_class_name(
+        'igdd_%sListItem ' % element_prefix)
     if list_items:
-        random_list_item_position = random.randrange(dropdown_start_position, len(list_items))
+        random_list_item_position = random.randrange(
+            dropdown_start_position, len(list_items))
         selection = list_items[random_list_item_position]
         selection.click()
         return True
@@ -213,7 +217,7 @@ def get_and_check_field_element_id(driver, xml_element):
                     pass
 
 
-from data_helper import get_random_user, get_active_end_users
+from data_helper import get_active_end_users
 
 
 def populate_html_editor(driver, tab_id, frame_id):
@@ -236,6 +240,14 @@ def populate_phone_field(driver, element_id):
     populate_field_text(driver, element_id, phone)
 
 
+import random
+
+
+def get_random_item(items):
+    i = random.randrange(0, len(items))
+    return items[i]
+
+
 def populate_field(driver, xml_element, field_data_type=type('1')):
     switch_to_frame_innercontentfrm(driver)
     app_field = xml_element[0]['app_field']
@@ -248,7 +260,7 @@ def populate_field(driver, xml_element, field_data_type=type('1')):
     elif 'phone' in app_field:
         populate_phone_field(driver, element_id)
     elif app_field == 'sys_eusername':
-        value = get_random_user(get_active_end_users())[0]
+        value = get_random_item(get_active_end_users())[0]
         populate_field_text(driver, element_id, value)
     elif app_field in get_dropdown_fields():
         populate_field_dropdown(driver, element_id, 1)
@@ -336,7 +348,8 @@ def delete_element_return_result(fields, delete_field):
 def check_field_validation_prompt(driver):
     time.sleep(1)
     try:
-        field_validation_prompt = element_wait(driver, 'ctl00_ContentPlaceHolder1_dialogMsg_tmpl_lbMsg', By.ID, 2)
+        field_validation_prompt = element_wait(
+            driver, 'ctl00_ContentPlaceHolder1_dialogMsg_tmpl_lbMsg', By.ID, 2)
         if field_validation_prompt.text:
             print 'Detected required field prompt:', field_validation_prompt.text
             return field_validation_prompt
@@ -346,7 +359,8 @@ def check_field_validation_prompt(driver):
 
 
 def get_field_data_type(driver):
-    required_field_prompt = element_wait(driver, 'ctl00_ContentPlaceHolder1_dialogMsg_tmpl_lbMsg', By.ID, 2)
+    required_field_prompt = element_wait(
+        driver, 'ctl00_ContentPlaceHolder1_dialogMsg_tmpl_lbMsg', By.ID, 2)
     if 'numeric' in required_field_prompt.text:
         return type(1)
     else:
@@ -354,14 +368,17 @@ def get_field_data_type(driver):
 
 
 def get_field_caption(driver):
-    field_validation_prompt = element_wait(driver, 'ctl00_ContentPlaceHolder1_dialogMsg_tmpl_lbMsg', By.ID, 2)
+    field_validation_prompt = element_wait(
+        driver, 'ctl00_ContentPlaceHolder1_dialogMsg_tmpl_lbMsg', By.ID, 2)
     field_validation_msg = field_validation_prompt.text
     if 'You must enter a value in the box' in field_validation_msg:
         field_caption = ''
     elif 'You must enter a numeric ' in field_validation_msg:
-        field_caption = field_validation_msg.replace('You must enter a numeric value in the ', '').replace(' box.', '')
+        field_caption = field_validation_msg.replace(
+            'You must enter a numeric value in the ', '').replace(' box.', '')
     else:
-        field_caption = field_validation_msg.replace('You must enter a value in the ', '').replace(' box.', '')
+        field_caption = field_validation_msg.replace(
+            'You must enter a value in the ', '').replace(' box.', '')
     return field_caption
 
 
@@ -441,7 +458,11 @@ def create_default_menu_new_item(driver, target_item):
         type_fields = get_type_fields(fields)
         if type_fields:
             populate_field_type(driver, type_fields)
-        desc_fields = ('sys_problemdesc', 'sys_problem_description', 'sys_change_description', 'actiondesc')
+        desc_fields = ('sys_problemdesc',
+                       'sys_problem_description',
+                       'sys_change_description',
+                       'actiondesc',
+                       )
         for field in fields:
             if field in desc_fields:
                 timestamp = populate_field(driver, fields[field][0])
@@ -480,14 +501,86 @@ def open_admin(driver):
     click(driver, admin)
 
 
-def create_new_request_status(driver):
+def select_dropdown_item_by_link_text(driver, button_id, list_id, link_text):
+    dropdown_button = element_wait(driver, button_id, By.ID)
+    dropdown_button.click()
+    time.sleep(1)
+    list_items_container = driver.find_element_by_id(list_id)
+    item = list_items_container.find_element_by_link_text(link_text)
+    item.click()
+    time.sleep(1)
+
+
+def create_new_request_status(driver, **kwargs):
+
+    def generate_name():
+        with open('test_data/adjective') as f:
+            name = get_random_item(f.readlines())[:-1]
+            return name[0].upper() + name[1:]
+
+    def get_random_color():
+        with open('test_data/colors') as f:
+            return get_random_item(f.readlines())[:-1]
+
     open_admin(driver)
     frame_wait(driver, 'innerContentFrm')
     request_statuses = element_wait(driver, 'Request Statuses', By.LINK_TEXT)
     click(driver, request_statuses)
     add_new = element_wait(driver, 'ctl00_ContentPlaceHolder1_btnAddPre', By.ID)
     click(driver, add_new)
-    status_name = element_wait(driver, 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_textStatus', By.ID)
-    status_name.send_keys('testing')
-    save = element_wait(driver, 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_btnUpdate', By.ID)
+    if not 'automatic_closure' in kwargs:
+        if not 'status_name' in kwargs:
+            kwargs['status_name'] = generate_name()
+        if not 'on_status' in kwargs:
+            kwargs['on_status'] = get_random_item(('Continue',
+                                                   'Suspend',
+                                                   'Closed',))
+    elif 'automatic_closure' in kwargs:
+        if not 'on_status' in kwargs:
+            kwargs['on_status'] = get_random_item(('Continue', 'Suspend'))
+        if not 'close_when' in kwargs:
+            kwargs['close_when'] = get_random_item(('Open Date',
+                                                    'Current Status'))
+        if not 'exceeds_these_days' in kwargs:
+            kwargs['exceeds_these_days'] = str(random.randint(0, 999))
+        if not 'status_name' in kwargs:
+            name = (generate_name(), ' -'
+                    ' On Status: ', kwargs['on_status'],
+                    ' Close when: ', kwargs['close_when'],
+                    ' exceeds days: ', kwargs['exceeds_these_days'])
+            kwargs['status_name'] = ''.join(name)
+        if not 'solution' in kwargs:
+            kwargs['solution'] = get_random_item(
+                ('',
+                 'This is an automatically generated solution for Request Status: %s' %
+                 kwargs['status_name']))
+        select_dropdown_item_by_link_text(
+            driver, 'x:972688325.3:mkr:Button', 'x:972688325.7:mkr:List:nw:1',
+            kwargs['close_when'])
+        exceeds_days_id = 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_txtNoOfDays'
+        driver.find_element_by_id(exceeds_days_id).send_keys(kwargs['exceeds_these_days'])
+        solution_id = 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_txtSolution'
+        driver.find_element_by_id(solution_id).send_keys(kwargs['solution'])
+    if not 'allow_end_user' in kwargs:
+        kwargs['allow_end_user'] = get_random_item(('Yes', 'No'))
+    if not 'force_status_color' in kwargs:
+        kwargs['force_status_color'] = get_random_item(('Yes', 'No'))
+    if not 'status_color' in kwargs:
+        kwargs['status_color'] = get_random_color()
+    status_name = element_wait(
+        driver, 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_textStatus', By.ID)
+    status_name.send_keys(kwargs['status_name'])
+    select_dropdown_item_by_link_text(
+        driver, 'x:1681566268.3:mkr:Button',
+        'x:1681566268.7:mkr:List:nw:1', kwargs['on_status'])
+    select_dropdown_item_by_link_text(
+        driver, 'x:1774636839.3:mkr:Button',
+        'x:1774636839.7:mkr:List:nw:1', kwargs['allow_end_user'])
+    select_dropdown_item_by_link_text(
+        driver, 'x:157696233.3:mkr:Button',
+        'x:157696233.7:mkr:List:nw:1', kwargs['force_status_color'])
+    status_color_id = 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_textFieldColor'
+    driver.find_element_by_id(status_color_id).send_keys(kwargs['status_color'])
+    save_id = 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_btnUpdate'
+    save = element_wait(driver, save_id, By.ID)
     click(driver, save)
