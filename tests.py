@@ -2,6 +2,7 @@ from selenium import webdriver
 import unittest
 import worker
 from settings import target_url, assert_text
+import time
 
 
 class TestSubmitAnalystItems(unittest.TestCase):
@@ -15,6 +16,7 @@ class TestSubmitAnalystItems(unittest.TestCase):
         worker.analyst_login(self.driver)
 
     def tearDown(self):
+        time.sleep(3)
         self.driver.quit()
 
     def assert_title(self):

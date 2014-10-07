@@ -491,7 +491,7 @@ def create_new_change_click_cab_group(driver):
     switch_to_frame_innercontentfrm(driver)
     cab_group = element_wait(driver, '//input[contains(@title,"Cab Group")]', By.XPATH)
     cab_group.click()
-    print 'Clicked in to Cab Group'
+    print 'Clicked in to CAB Group\n'
 
 
 def open_admin(driver):
@@ -509,6 +509,9 @@ def select_dropdown_item_by_link_text(driver, button_id, list_id, link_text):
     item = list_items_container.find_element_by_link_text(link_text)
     item.click()
     time.sleep(1)
+
+
+from data_helper import get_request_status
 
 
 def create_new_request_status(driver, **kwargs):
@@ -535,6 +538,7 @@ def create_new_request_status(driver, **kwargs):
             kwargs['on_status'] = get_random_item(('Continue',
                                                    'Suspend',
                                                    'Closed',))
+        kwargs['solution'] = str(datetime.now())
     elif 'automatic_closure' in kwargs:
         if not 'on_status' in kwargs:
             kwargs['on_status'] = get_random_item(('Continue', 'Suspend'))
@@ -544,29 +548,27 @@ def create_new_request_status(driver, **kwargs):
         if not 'exceeds_these_days' in kwargs:
             kwargs['exceeds_these_days'] = str(random.randint(0, 999))
         if not 'status_name' in kwargs:
-            name = (generate_name(), ' -'
-                    ' On Status: ', kwargs['on_status'],
-                    ' Close when: ', kwargs['close_when'],
-                    ' exceeds days: ', kwargs['exceeds_these_days'])
+            name = (generate_name(), ' - ',
+                    kwargs['on_status'], ', ',
+                    kwargs['close_when'], ', ',
+                    kwargs['exceeds_these_days'])
             kwargs['status_name'] = ''.join(name)
-        if not 'solution' in kwargs:
-            kwargs['solution'] = get_random_item(
-                ('',
-                 'This is an automatically generated solution for Request Status: %s' %
-                 kwargs['status_name']))
         select_dropdown_item_by_link_text(
             driver, 'x:972688325.3:mkr:Button', 'x:972688325.7:mkr:List:nw:1',
             kwargs['close_when'])
         exceeds_days_id = 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_txtNoOfDays'
         driver.find_element_by_id(exceeds_days_id).send_keys(kwargs['exceeds_these_days'])
-        solution_id = 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_txtSolution'
-        driver.find_element_by_id(solution_id).send_keys(kwargs['solution'])
     if not 'allow_end_user' in kwargs:
         kwargs['allow_end_user'] = get_random_item(('Yes', 'No'))
     if not 'force_status_color' in kwargs:
         kwargs['force_status_color'] = get_random_item(('Yes', 'No'))
     if not 'status_color' in kwargs:
         kwargs['status_color'] = get_random_color()
+    if not 'solution' in kwargs:
+        kwargs['solution'] = get_random_item(
+            ('',
+             'This is an automatically generated solution for Request Status: %s' %
+             (kwargs['status_name'])))
     status_name = element_wait(
         driver, 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_textStatus', By.ID)
     status_name.send_keys(kwargs['status_name'])
@@ -580,7 +582,17 @@ def create_new_request_status(driver, **kwargs):
         driver, 'x:157696233.3:mkr:Button',
         'x:157696233.7:mkr:List:nw:1', kwargs['force_status_color'])
     status_color_id = 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_textFieldColor'
-    driver.find_element_by_id(status_color_id).send_keys(kwargs['status_color'])
+    status_color = driver.find_element_by_id(status_color_id)
+    status_color.clear()
+    status_color.send_keys(kwargs['status_color'])
+    solution_id = 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_txtSolution'
+    driver.find_element_by_id(solution_id).send_keys(kwargs['solution'])
     save_id = 'ctl00_ContentPlaceHolder1_dialogInfo_tmpl_btnUpdate'
     save = element_wait(driver, save_id, By.ID)
     click(driver, save)
+    print 'Saved Request Status:', kwargs['status_name']
+    time.sleep(1)
+    if get_request_status(**kwargs):
+        print 'Success! New record confirmed: %s\n' % kwargs['status_name']
+    else:
+        raise Exception('New record not found in database.')

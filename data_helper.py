@@ -186,7 +186,10 @@ def get_description_column(table):
 def get_record_with_timestamp(form_name, timestamp):
     table = get_form_table_name(form_name)
     desc_column = get_description_column(table)
-    query = "select sys_%s_id from %s where %s like '%%%s%%'" % (table, table, desc_column, timestamp)
+    query = "select sys_%s_id from %s where %s like '%%%s%%'" % (table,
+                                                                 table,
+                                                                 desc_column,
+                                                                 timestamp)
     results = exec_sql_read(query)
     return move_data_outside_of_tuple(results)
 
@@ -194,8 +197,18 @@ def get_record_with_timestamp(form_name, timestamp):
 def delete_timestamp(form_name, timestamp):
     table = get_form_table_name(form_name)
     desc_column = get_description_column(table)
-    query = "update %s set %s = 'test' where %s like '%%%s%%'" % (table, desc_column, desc_column, timestamp)
+    query = "update %s set %s = 'test' where %s like '%%%s%%'" % (table,
+                                                                  desc_column,
+                                                                  desc_column,
+                                                                  timestamp)
     exec_sql_cud(query)
+
+
+def get_request_status(**kwargs):
+    query = ("select sys_status from status "
+             "where sys_status = '%s'") % kwargs['status_name']
+    results = exec_sql_read(query)
+    return move_data_outside_of_tuple(results)
 
 
 def convert_string_true_false(string):
