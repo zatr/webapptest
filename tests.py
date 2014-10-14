@@ -13,7 +13,7 @@ class TestSubmitAnalystItems(unittest.TestCase):
         self.assert_text = assert_text
         self.driver.get(self.target_url)
         self.assert_title()
-        worker.analyst_login(self.driver)
+        worker.login_analyst(self.driver)
 
     def tearDown(self):
         time.sleep(3)

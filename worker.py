@@ -1,8 +1,10 @@
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from settings import *
 
 
 def click(driver, element):
@@ -40,10 +42,14 @@ def switch_to_frame_innercontentfrm(driver):
     frame_wait(driver, 'innerContentFrm')
 
 
-from settings import app_username, app_password, element_prefix
+def open_browser_connect_to_site(site, assert_text):
+    dvr = webdriver.Firefox()
+    dvr.get(site)
+    assert assert_text == dvr.title
+    return dvr
 
 
-def analyst_login(driver):
+def login_analyst(driver):
     driver.switch_to.frame('main')
     login = driver.find_element_by_id('hlsys_button1')
     login.send_keys(Keys.RETURN)
@@ -77,14 +83,20 @@ from datetime import datetime
 
 
 def populate_field_text(driver, element_id, value=None):
-    element = element_wait(driver, element_id, By.ID)
-    element.send_keys(Keys.CONTROL, 'a')
-    if value:
+
+    def enter_value():
+        time.sleep(1)
+        element = driver.find_element_by_id(element_id)
+        element.send_keys(Keys.CONTROL, 'a')
         element.send_keys(value)
-    else:
+
+    if not value:
         timestamp = str(datetime.now())
-        element.send_keys('Test data generated: %s' % timestamp)
+        value = 'Test data generated: %s' % timestamp
+        enter_value()
         return timestamp
+    else:
+        enter_value()
 
 
 def get_popup_window(driver, open_windows_before_popup):
@@ -93,10 +105,10 @@ def get_popup_window(driver, open_windows_before_popup):
             return w
 
 
-def get_table_items(table):
+def get_table_items(table, item_id):
     items = []
     for item in table:
-        if 'ctl00_ContentPlaceHolder1_dg_it0' in item.get_attribute('id'):
+        if item_id in item.get_attribute('id'):
             items.append(item)
     return items
 
@@ -123,10 +135,23 @@ def populate_field_selector(driver, element_id):
         selection.click()
         # TODO: Make this select child nodes
     except:
+        pass
+    try:
         table = elements_wait(driver, '//tr/td/a', By.XPATH)
-        items = get_table_items(table)
+        item_id = 'ctl00_ContentPlaceHolder1_dg_it0'
+        items = get_table_items(table, item_id)
         selection = items[random.randrange(0, len(items))]
         selection.click()
+    except:
+        pass
+    try:
+        table = elements_wait(driver, '//tr/td/a', By.XPATH)
+        item_id = 'ctl00_ContentPlaceHolder1_dg_it1'
+        items = get_table_items(table, item_id)
+        selection = items[random.randrange(0, len(items))]
+        selection.click()
+    except:
+        pass
     try:
         driver.switch_to.alert.accept()
     except:
@@ -202,19 +227,29 @@ def get_and_check_field_element_id(driver, xml_element):
             if 'fieldcombo' in xml_tag or app_field in get_dropdown_fields():
                 dropdown_field_id = 'ctl00_ContentPlaceHolder1_dd%s' % xml_tag
                 return dropdown_field_id
+            elif app_field == 'sys_eusername':
+                text_field_id = 'ctl00_ContentPlaceHolder1_text%s' % xml_tag
+                return text_field_id
+            elif app_field == 'sys_siteid':
+                selector_id = 'ctl00_ContentPlaceHolder1_hl%sselsite' % xml_tag
+                return selector_id
             else:
                 try:
                     selector_id = 'ctl00_ContentPlaceHolder1_hl%s' % xml_tag
                     driver.find_element_by_id(selector_id)
                     return selector_id
                 except:
-                    pass
-                try:
-                    text_field_id = 'ctl00_ContentPlaceHolder1_text%s' % xml_tag
-                    driver.find_element_by_id(text_field_id)
-                    return text_field_id
-                except:
-                    pass
+                    try:
+                        text_field_id = 'ctl00_ContentPlaceHolder1_text%s' % xml_tag
+                        driver.find_element_by_id(text_field_id)
+                        return text_field_id
+                    except:
+                        try:
+                            text_field_id = 'ctl00_ContentPlaceHolder1_tabMain_text%s' % xml_tag
+                            driver.find_element_by_id(text_field_id)
+                            return text_field_id
+                        except:
+                            pass
 
 
 from data_helper import get_active_end_users
@@ -262,13 +297,15 @@ def populate_field(driver, xml_element, field_data_type=type('1')):
     elif app_field == 'sys_eusername':
         value = get_random_item(get_active_end_users())[0]
         populate_field_text(driver, element_id, value)
+    elif app_field == 'sys_siteid':
+        populate_field_selector(driver, element_id)
     elif app_field in get_dropdown_fields():
         populate_field_dropdown(driver, element_id, 1)
     else:
         if element_id:
             if 'ctl00_ContentPlaceHolder1_dd' in element_id:
                 populate_field_dropdown(driver, element_id)
-            elif 'ctl00_ContentPlaceHolder1_text' in element_id:
+            elif 'text' in element_id:
                 if field_data_type is int:
                     populate_field_text(driver, element_id, str(random.randint(0, 23)))
                 else:
@@ -346,7 +383,7 @@ def delete_element_return_result(fields, delete_field):
 
 
 def check_field_validation_prompt(driver):
-    time.sleep(1)
+    time.sleep(2)
     try:
         field_validation_prompt = element_wait(
             driver, 'ctl00_ContentPlaceHolder1_dialogMsg_tmpl_lbMsg', By.ID, 2)
@@ -442,7 +479,7 @@ def get_menu_item(driver, target_item):
                 return_items.append(item)
         elif item_text == target_item or item_text == check_item_against_appterms(target_item):
             return [item]
-        elif item == menu_new_items[len(menu_new_items)-1]:
+        elif item == menu_new_items[len(menu_new_items) - 1]:
             raise Exception('No matches in menu new items for: %s' % target_item)
     return return_items
 
@@ -469,6 +506,7 @@ def create_default_menu_new_item(driver, target_item):
         submit_form(driver, fields)
         print 'Saved item:', item_text
         print 'Checking database for new record...'
+        time.sleep(1)
         new_record = get_record_with_timestamp(item_text, timestamp)
         if new_record:
             print 'Success! New record confirmed: %s %s\n' % (item_text, new_record[0])
@@ -596,3 +634,36 @@ def create_new_request_status(driver, **kwargs):
         print 'Success! New record confirmed: %s\n' % kwargs['status_name']
     else:
         raise Exception('New record not found in database.')
+
+
+import argparse
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--all_requests', help='Create all requests', action='store_true')
+    parser.add_argument('-A', '--all_items', help='Create all items', action='store_true')
+    parser.add_argument('-p', '--problem', help='Create problem', action='store_true')
+    parser.add_argument('-c', '--change', help='Create change', action='store_true')
+    args = parser.parse_args()
+    if args.all_requests:
+        driver = open_browser_connect_to_site(target_url, assert_text)
+        login_analyst(driver)
+        create_default_menu_new_item(driver, 'all requests')
+    elif args.all_items:
+        driver = open_browser_connect_to_site(target_url, assert_text)
+        login_analyst(driver)
+        create_default_menu_new_item(driver, 'all')
+    elif args.problem:
+        driver = open_browser_connect_to_site(target_url, assert_text)
+        login_analyst(driver)
+        create_default_menu_new_item(driver, 'problem')
+    elif args.change:
+        driver = open_browser_connect_to_site(target_url, assert_text)
+        login_analyst(driver)
+        create_default_menu_new_item(driver, 'change')
+    driver.quit()
+
+
+if __name__ == '__main__':
+    main()
